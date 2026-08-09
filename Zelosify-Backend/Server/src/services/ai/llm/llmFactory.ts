@@ -7,16 +7,14 @@ let cachedProvider: LLMProvider | null = null;
 export async function createLLMProvider(
   providerType?: LLMProviderType
 ): Promise<LLMProvider> {
-  if (cachedProvider) {
-    return cachedProvider;
-  }
+  if (cachedProvider) return cachedProvider;
 
-  const selectedProvider =
+  const selected =
     providerType || (process.env.LLM_PROVIDER as LLMProviderType) || "gemini";
 
   let provider: LLMProvider;
 
-  switch (selectedProvider) {
+  switch (selected) {
     case "groq": {
       const { GroqProvider } = await import("./groqProvider.js");
       provider = new GroqProvider({
@@ -37,7 +35,6 @@ export async function createLLMProvider(
   }
 
   cachedProvider = provider;
-  console.log(`[LLM] Using provider: ${provider.getProviderName()}`);
   return provider;
 }
 

@@ -9,12 +9,39 @@ export interface ParsedResume {
   location: string | null;
   email: string | null;
   phone: string | null;
+  normalizedSkills: string[];
+  keywords: string[];
 }
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   const pdfExtract = (await import("pdf-extraction")).default;
   const data = await pdfExtract(buffer);
   return data.text || "";
+}
+
+async function extractTextFromPPTX(buffer: Buffer): Promise<string> {
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(buffer);
+  const slides: string[] = [];
+
+  const slideFiles = Object.keys(zip.files).filter(
+    (name) => name.startsWith("ppt/slides/slide") && name.endsWith(".xml")
+  );
+
+  for (const slideFile of slideFiles.sort()) {
+    const content = await zip.file(slideFile)?.async("string");
+    if (content) {
+      const textMatches = content.match(/<a:t>([^<]+)<\/a:t>/g);
+      if (textMatches) {
+        const slideText = textMatches
+          .map((t) => t.replace(/<\/?a:t>/g, ""))
+          .join(" ");
+        slides.push(slideText);
+      }
+    }
+  }
+
+  return slides.join("\n");
 }
 
 function streamToBuffer(stream: Readable): Promise<Buffer> {
@@ -24,6 +51,34 @@ function streamToBuffer(stream: Readable): Promise<Buffer> {
     stream.on("end", () => resolve(Buffer.concat(chunks)));
     stream.on("error", reject);
   });
+}
+
+const SKILL_SYNONYMS: Record<string, string> = {
+  js: "JavaScript",
+  ts: "TypeScript",
+  reactjs: "React",
+  reactjs: "React",
+  nodejs: "Node.js",
+  node: "Node.js",
+  vuejs: "Vue.js",
+  vue: "Vue.js",
+  nextjs: "Next.js",
+  next: "Next.js",
+  aws: "AWS",
+  gcp: "GCP",
+  azure: "Azure",
+  k8s: "Kubernetes",
+  tf: "TensorFlow",
+  pytorch: "PyTorch",
+  postgres: "PostgreSQL",
+  mongo: "MongoDB",
+  ci: "CI/CD",
+  cd: "CI/CD",
+};
+
+function normalizeSkill(skill: string): string {
+  const lower = skill.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return SKILL_SYNONYMS[lower] || skill;
 }
 
 function extractSkills(text: string): string[] {
@@ -123,25 +178,54 @@ function extractPhone(text: string): string | null {
   return null;
 }
 
+function extractKeywords(text: string): string[] {
+  const stopWords = new Set([
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
+    "being", "have", "has", "had", "do", "does", "did", "will", "would",
+    "could", "should", "may", "might", "shall", "can", "this", "that",
+    "these", "those", "i", "you", "he", "she", "it", "we", "they",
+  ]);
+
+  const words = text.toLowerCase().match(/\b[a-z]{3,}\b/g) || [];
+  const freq = new Map<string, number>();
+  for (const word of words) {
+    if (!stopWords.has(word)) {
+      freq.set(word, (freq.get(word) || 0) + 1);
+    }
+  }
+  return Array.from(freq.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([word]) => word);
+}
+
 export async function parseResume(s3Key: string): Promise<ParsedResume> {
   const storageService = createStorageService();
   const stream = await storageService.getObjectStream(s3Key);
   const buffer = await streamToBuffer(stream);
 
   let text = "";
-  if (s3Key.toLowerCase().endsWith(".pdf")) {
+  const lowerKey = s3Key.toLowerCase();
+  if (lowerKey.endsWith(".pdf")) {
     text = await extractTextFromPDF(buffer);
+  } else if (lowerKey.endsWith(".pptx")) {
+    text = await extractTextFromPPTX(buffer);
   } else {
     text = buffer.toString("utf-8");
   }
 
+  const skills = extractSkills(text);
+
   return {
     text,
-    skills: extractSkills(text),
+    skills,
     experienceYears: extractExperienceYears(text),
     education: extractEducation(text),
     location: extractLocation(text),
     email: extractEmail(text),
     phone: extractPhone(text),
+    normalizedSkills: skills.map(normalizeSkill),
+    keywords: extractKeywords(text),
   };
 }

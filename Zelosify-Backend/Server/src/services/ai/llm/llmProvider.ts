@@ -1,6 +1,21 @@
+export interface LLMResult {
+  text: string;
+  tokenUsage?: {
+    prompt: number;
+    completion: number;
+    total: number;
+  };
+}
+
 export interface LLMProvider {
-  analyze(prompt: string): Promise<string>;
+  generate(prompt: string, options?: LLMGenerateOptions): Promise<LLMResult>;
   getProviderName(): string;
+}
+
+export interface LLMGenerateOptions {
+  temperature?: number;
+  maxTokens?: number;
+  systemPrompt?: string;
 }
 
 export interface LLMConfig {
