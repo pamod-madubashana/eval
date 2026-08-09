@@ -1,6 +1,9 @@
 import KeycloakConnect from "keycloak-connect";
 import session from "express-session";
 import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Environment variables and constants
 const KEYCLOAK_URL = process.env.KEYCLOAK_URL || "http://localhost:8080/auth";

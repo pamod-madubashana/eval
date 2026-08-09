@@ -2,7 +2,7 @@ name: zelosify-recruit-backend
 
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:16
     container_name: recruit-postgres
     restart: unless-stopped
     environment:
@@ -51,7 +51,7 @@ services:
     volumes:
       - keycloak_data:/opt/keycloak/data
     ports:
-      - "8080:8080"
+      - "8180:8080"
     command:
       - start-dev
       - --http-enabled=true
