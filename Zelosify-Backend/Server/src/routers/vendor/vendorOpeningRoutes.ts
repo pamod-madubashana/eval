@@ -2,6 +2,8 @@ import express from "express";
 import { authenticateUser } from "../../middlewares/auth/authenticateMiddleware.js";
 import { authorizeRole } from "../../middlewares/auth/authorizeMiddleware.js";
 import prisma from "../../config/prisma/prisma.js";
+import { runAgent } from "../../services/ai/recommendationAgent.js";
+import { logger } from "../../services/ai/logger.js";
 
 const router = express.Router();
 
@@ -199,6 +201,21 @@ router.post(
 
         return newProfile;
       });
+
+      // Auto-trigger recommendation agent
+      runAgent({ profileId: profile.id, openingId, useLLM: false })
+        .then((result) => {
+          logger.info("Auto-recommendation complete", "vendor-upload", {
+            profileId: profile.id,
+            score: result.score,
+            latencyMs: result.latencyMs,
+          });
+        })
+        .catch((err) => {
+          logger.error("Auto-recommendation failed", "vendor-upload", err, {
+            profileId: profile.id,
+          });
+        });
 
       res.status(201).json({
         message: "Profile submitted successfully",
