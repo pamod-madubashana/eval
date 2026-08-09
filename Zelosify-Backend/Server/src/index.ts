@@ -19,6 +19,8 @@ import authRoutes from "./routers/auth/authRoute.js";
 import awsRouter from "./routers/aws/awsRoute.js";
 import vendorRoutes from "./routers/vendor/vendorRoutes.js";
 import hiringManagerRoutes from "./routers/hiring/hiringManagerRoutes.js";
+import aiRoutes from "./routers/ai/aiRoutes.js";
+import analyticsRoutes from "./routers/analytics/analyticsRoutes.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -81,6 +83,12 @@ async function startServer() {
 
     // Hiring manager routes
     app.use("/api/v1/hiring-manager", hiringManagerRoutes);
+
+    // AI recommendation agent routes
+    app.use("/api/v1/ai", aiRoutes);
+
+    // Analytics routes
+    app.use("/api/v1/analytics", analyticsRoutes);
 
     // Request debugging middleware - logs all incoming requests
     app.use((req, _, next) => {
