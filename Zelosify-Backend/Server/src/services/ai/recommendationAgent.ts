@@ -1,6 +1,7 @@
 import prisma from "../../config/prisma/prisma.js";
 import { parseResume, ParsedResume } from "./parsing/resumeParser.js";
-import { createLLMProvider, LLMProvider } from "./llm/llmProvider.js";
+import { createLLMProvider } from "./llm/llmFactory.js";
+import { LLMProvider } from "./llm/llmProvider.js";
 import { logger, sanitizeInput } from "./logger.js";
 import {
   FeatureVector,
