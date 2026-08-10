@@ -24,14 +24,41 @@ Multi-tenant contract hiring module with AI-powered candidate recommendation, RB
 - **RBAC** — IT Vendor and Hiring Manager roles via Keycloak
 - **AI recommendation agent** — Groq/Gemini LLM for resume parsing and candidate scoring
 - **Prompt injection hardening** — sanitized LLM inputs, keyword blocklists
-- **S3 storage** — MinIO-compatible presigned URLs for resume uploads
+- **S3 storage** — AWS S3 primary, MinIO fallback for local development
 - **Performance SLAs** — timeout middleware, rate limiting, per-profile scoring under 1.5s
 
 ## Prerequisites
 
-- Docker (PostgreSQL, Keycloak, MinIO)
+- Docker (PostgreSQL, Keycloak, MinIO for fallback)
 - Node.js v22+
 - npm
+
+## Storage Configuration
+
+The backend uses **AWS S3** as the primary storage provider with automatic **MinIO fallback** for local development.
+
+### Environment Variables
+
+```bash
+# Primary: AWS S3
+STORAGE_PROVIDER=aws
+S3_AWS_REGION=us-east-1
+S3_ACCESS_KEY_ID=your_aws_access_key
+S3_SECRET_ACCESS_KEY=your_aws_secret_key
+S3_BUCKET_NAME=your-bucket-name
+
+# Fallback: MinIO (used if AWS S3 fails)
+MINIO_ENDPOINT=http://localhost:9100
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=zelosify-uploads
+```
+
+### How It Works
+
+1. On startup, the backend attempts to initialize AWS S3
+2. If AWS S3 fails (invalid credentials, network issues), it automatically falls back to MinIO
+3. MinIO is S3-compatible, so the same API works for both
 
 ## Installation
 

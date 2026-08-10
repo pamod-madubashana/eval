@@ -17,6 +17,11 @@
 
 Multi-tenant contract hiring backend with AI candidate recommendation, strict RBAC, tenant isolation, and performance SLAs.
 
+## Storage
+
+- **Primary**: AWS S3 (production)
+- **Fallback**: MinIO (local development, S3-compatible)
+
 ## Project Structure
 
 ```
