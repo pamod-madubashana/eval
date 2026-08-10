@@ -70,7 +70,6 @@ npm run dev
 | Frontend | http://localhost:3000 |
 | Backend API | http://localhost:5000/api/v1 |
 | Keycloak | http://localhost:8180 |
-| MinIO Console | http://localhost:9001 |
 
 ## Documentation
 
