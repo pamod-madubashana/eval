@@ -37,8 +37,8 @@ export default function ManagerOpeningsLayout() {
 
   const filteredOpenings = openings.filter(
     (opening) =>
-      opening.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      opening.location.toLowerCase().includes(searchQuery.toLowerCase())
+      (opening.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (opening.location || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

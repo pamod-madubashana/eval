@@ -15,7 +15,7 @@ export class VendorController {
       const limit = parseInt(req.query.limit as string) || 10;
 
       const result = await this.listOpeningsUseCase.execute({ tenantId, page, limit });
-      res.json(result);
+      res.json({ openings: result.items, pagination: result.pagination });
     } catch (error) {
       this.handleError(res, error);
     }
@@ -25,8 +25,9 @@ export class VendorController {
     try {
       const { tenantId } = req.user.tenant;
       const { id } = req.params;
+      const userId = req.user.id;
 
-      const opening = await this.getOpeningDetailsUseCase.execute(id, tenantId);
+      const opening = await this.getOpeningDetailsUseCase.execute(id, tenantId, userId);
       res.json(opening);
     } catch (error) {
       this.handleError(res, error);
