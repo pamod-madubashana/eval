@@ -233,7 +233,7 @@ router.post(
       });
 
       // Auto-trigger recommendation agent
-      runAgent({ profileId: profile.id, openingId, useLLM: false })
+      runAgent({ profileId: profile.id, openingId, tenantId, useLLM: false })
         .then((result) => {
           logger.info("Auto-recommendation complete", "vendor-upload", {
             profileId: profile.id,

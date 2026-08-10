@@ -30,10 +30,11 @@ export class HiringManagerController {
   listOpenings = async (req: any, res: Response): Promise<void> => {
     try {
       const { tenantId } = req.user.tenant;
+      const userId = req.user.id;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
-      const result = await this.listOpeningsUseCase.execute({ tenantId, page, limit });
+      const result = await this.listOpeningsUseCase.execute({ tenantId, page, limit, hiringManagerId: userId });
       res.json({ openings: result.items, pagination: result.pagination });
     } catch (error) {
       this.handleError(res, error);

@@ -11,6 +11,7 @@ export interface IOpeningRepository {
 export interface PaginationOptions {
   page: number;
   limit: number;
+  hiringManagerId?: string;
 }
 
 export interface PaginatedResult<T> {

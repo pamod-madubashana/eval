@@ -8,6 +8,7 @@ export interface ListOpeningsInput {
   tenantId: string;
   page: number;
   limit: number;
+  hiringManagerId?: string;
 }
 
 export class ListOpenings {
@@ -20,6 +21,7 @@ export class ListOpenings {
     const result = await this.openingRepo.findByTenant(input.tenantId, {
       page: input.page,
       limit: input.limit,
+      hiringManagerId: input.hiringManagerId,
     });
 
     const openingsWithStats = await Promise.all(

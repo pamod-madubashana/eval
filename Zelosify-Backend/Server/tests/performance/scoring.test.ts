@@ -10,7 +10,7 @@ function calculateSkillMatch(candidateSkills: string[], jobDescription: string):
 
 function calculateExperienceMatch(candidateExp: number | null, min: number, max: number): number {
   if (candidateExp === null) return 0.5;
-  if (candidateExp < min) return Math.max(0, 1 - (min - candidateExp) * 0.2);
+  if (candidateExp < min) return 0;
   if (candidateExp > max) return 0.8;
   return 1.0;
 }
@@ -20,7 +20,7 @@ function calculateLocationMatch(candidateLoc: string | null, openingLoc: string)
   const candidate = candidateLoc?.toLowerCase() || "";
   if (opening.includes("remote")) return 1.0;
   if (candidate && opening.includes(candidate)) return 1.0;
-  if (candidate) return 0.4;
+  if (candidate) return 0.5;
   return 0.5;
 }
 

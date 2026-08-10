@@ -3,7 +3,7 @@ import { IOpeningRepository } from "../../ports/repositories/IOpeningRepository.
 import { IEmailService } from "../../ports/services/IEmailService.js";
 import { IUserRepository } from "../../ports/repositories/IUserRepository.js";
 import { CandidateProfile, ProfileStatus } from "../../domain/entities/index.js";
-import { NotFoundError } from "../../domain/errors/index.js";
+import { NotFoundError, ForbiddenError } from "../../domain/errors/index.js";
 
 export class ShortlistProfile {
   constructor(
@@ -21,6 +21,7 @@ export class ShortlistProfile {
   ): Promise<CandidateProfile> {
     const opening = await this.openingRepo.findByIdAndTenant(openingId, tenantId);
     if (!opening) throw new NotFoundError("Opening", openingId);
+    if (opening.hiringManagerId !== userId) throw new ForbiddenError("You can only manage your own openings");
 
     const profile = await this.candidateRepo.findByIdAndOpening(profileId, openingId);
     if (!profile) throw new NotFoundError("Profile", profileId);
@@ -67,6 +68,7 @@ export class RejectProfile {
   ): Promise<CandidateProfile> {
     const opening = await this.openingRepo.findByIdAndTenant(openingId, tenantId);
     if (!opening) throw new NotFoundError("Opening", openingId);
+    if (opening.hiringManagerId !== userId) throw new ForbiddenError("You can only manage your own openings");
 
     const profile = await this.candidateRepo.findByIdAndOpening(profileId, openingId);
     if (!profile) throw new NotFoundError("Profile", profileId);
@@ -116,6 +118,7 @@ export class UpdateProfileStatus {
 
     const opening = await this.openingRepo.findByIdAndTenant(openingId, tenantId);
     if (!opening) throw new NotFoundError("Opening", openingId);
+    if (opening.hiringManagerId !== userId) throw new ForbiddenError("You can only manage your own openings");
 
     const profile = await this.candidateRepo.findByIdAndOpening(profileId, openingId);
     if (!profile) throw new NotFoundError("Profile", profileId);
