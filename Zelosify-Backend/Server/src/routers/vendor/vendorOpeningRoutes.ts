@@ -62,7 +62,7 @@ router.get(
 
 /**
  * GET /vendor/openings/:id
- * Fetch opening details with profiles
+ * Fetch opening details with profiles, hiring manager name, and count
  */
 router.get(
   "/:id",
@@ -80,6 +80,14 @@ router.get(
             where: { isDeleted: false, uploadedBy: req.user.id },
             orderBy: { submittedAt: "desc" },
           },
+          tenant: {
+            select: {
+              users: {
+                where: { id: undefined },
+                select: { id: true, firstName: true, lastName: true, username: true },
+              },
+            },
+          },
         },
       });
 
@@ -87,7 +95,29 @@ router.get(
         return res.status(404).json({ message: "Opening not found" });
       }
 
-      res.json(opening);
+      // Resolve hiring manager name
+      const hiringManager = await prisma.user.findUnique({
+        where: { id: opening.hiringManagerId },
+        select: { firstName: true, lastName: true, username: true },
+      });
+
+      const hiringManagerName = hiringManager
+        ? hiringManager.firstName
+          ? `${hiringManager.firstName} ${hiringManager.lastName || ""}`.trim()
+          : hiringManager.username || "Unknown"
+        : "Unknown";
+
+      // Get total profiles count for this opening (not just vendor's)
+      const totalProfilesCount = await prisma.hiringProfile.count({
+        where: { openingId: id, isDeleted: false },
+      });
+
+      res.json({
+        ...opening,
+        hiringManagerName,
+        profilesCount: totalProfilesCount,
+        tenant: undefined,
+      });
     } catch (error) {
       console.error("Error fetching opening details:", error);
       res.status(500).json({ message: "Internal server error" });

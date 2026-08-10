@@ -216,6 +216,7 @@ interface AgentInput {
   openingId: string;
   tenantId: string;
   useLLM?: boolean;
+  forceRerun?: boolean;
 }
 
 interface AgentResult {
@@ -298,6 +299,22 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     where: { id: input.profileId, opening: { tenantId: input.tenantId } },
   });
   if (!profile) throw new Error(`Profile ${input.profileId} not found`);
+
+  // Reset recommendation fields if forceRerun
+  if (input.forceRerun && profile.recommended !== null) {
+    await prisma.hiringProfile.update({
+      where: { id: input.profileId },
+      data: {
+        recommended: null,
+        recommendationScore: null,
+        recommendationReason: null,
+        recommendationLatencyMs: null,
+        recommendationVersion: null,
+        recommendationConfidence: null,
+        recommendedAt: null,
+      },
+    });
+  }
 
   // Step 2: Parse resume via tool (with optional LLM enhancement)
   const parseStart = Date.now();
@@ -458,7 +475,8 @@ Provide your analysis with reasoning. The deterministic score is the baseline; a
 export async function runBatchAgent(
   openingId: string,
   tenantId: string,
-  useLLM = false
+  useLLM = false,
+  forceRerun = false
 ): Promise<{
   results: AgentResult[];
   stats: {
@@ -476,13 +494,18 @@ export async function runBatchAgent(
   });
   if (!opening) throw new Error(`Opening ${openingId} not found for tenant`);
 
+  // If forceRerun, process all submitted profiles; otherwise only unrecommended
+  const whereClause: any = {
+    openingId,
+    status: "SUBMITTED",
+    isDeleted: false,
+  };
+  if (!forceRerun) {
+    whereClause.recommended = null;
+  }
+
   const profiles = await prisma.hiringProfile.findMany({
-    where: {
-      openingId,
-      status: "SUBMITTED",
-      isDeleted: false,
-      recommended: null,
-    },
+    where: whereClause,
   });
 
   const results: AgentResult[] = [];
@@ -496,6 +519,7 @@ export async function runBatchAgent(
         openingId,
         tenantId,
         useLLM,
+        forceRerun,
       });
       results.push(result);
       latencies.push(result.latencyMs);
@@ -539,6 +563,7 @@ export async function runRecommendationAgent(input: {
   openingId: string;
   tenantId: string;
   useLLM?: boolean;
+  forceRerun?: boolean;
 }) {
   const result = await runAgent(input);
   return {

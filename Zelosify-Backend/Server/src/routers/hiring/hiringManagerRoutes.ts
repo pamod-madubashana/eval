@@ -32,7 +32,7 @@ router.get(
 
 /**
  * GET /api/v1/hiring-manager/openings
- * List all openings for the hiring manager's tenant
+ * List all openings for the hiring manager (tenant + ownership filtered)
  */
 router.get(
   "/openings",
@@ -41,13 +41,14 @@ router.get(
   async (req: any, res) => {
     try {
       const { tenantId } = req.user.tenant;
+      const userId = req.user.id;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const skip = (page - 1) * limit;
 
       const [openings, total] = await Promise.all([
         prisma.opening.findMany({
-          where: { tenantId },
+          where: { tenantId, hiringManagerId: userId },
           include: {
             hiringProfiles: {
               where: { isDeleted: false },
@@ -58,7 +59,7 @@ router.get(
           skip,
           take: limit,
         }),
-        prisma.opening.count({ where: { tenantId } }),
+        prisma.opening.count({ where: { tenantId, hiringManagerId: userId } }),
       ]);
 
       const openingsWithStats = openings.map((o) => ({
@@ -94,7 +95,7 @@ router.get(
 
 /**
  * GET /api/v1/hiring-manager/openings/:id
- * Get opening details with all profiles
+ * Get opening details with all profiles (ownership verified)
  */
 router.get(
   "/openings/:id",
@@ -103,10 +104,11 @@ router.get(
   async (req: any, res) => {
     try {
       const { tenantId } = req.user.tenant;
+      const userId = req.user.id;
       const { id } = req.params;
 
       const opening = await prisma.opening.findFirst({
-        where: { id, tenantId },
+        where: { id, tenantId, hiringManagerId: userId },
         include: {
           hiringProfiles: {
             where: { isDeleted: false },
@@ -141,7 +143,7 @@ router.patch(
       const { openingId, profileId } = req.params;
 
       const opening = await prisma.opening.findFirst({
-        where: { id: openingId, tenantId },
+        where: { id: openingId, tenantId, hiringManagerId: userId },
       });
 
       if (!opening) {
@@ -200,11 +202,6 @@ router.patch(
     }
   }
 );
-
-/**
- * PATCH /api/v1/hiring-manager/openings/:openingId/profiles/:profileId/reject
- * Reject a profile
- */
 router.patch(
   "/openings/:openingId/profiles/:profileId/reject",
   authenticateUser as RequestHandler,
@@ -215,7 +212,7 @@ router.patch(
       const { openingId, profileId } = req.params;
 
       const opening = await prisma.opening.findFirst({
-        where: { id: openingId, tenantId },
+        where: { id: openingId, tenantId, hiringManagerId: userId },
       });
 
       if (!opening) {
@@ -294,7 +291,7 @@ router.patch(
       }
 
       const opening = await prisma.opening.findFirst({
-        where: { id: openingId, tenantId },
+        where: { id: openingId, tenantId, hiringManagerId: userId },
       });
 
       if (!opening) {
@@ -341,7 +338,7 @@ router.patch(
 
 /**
  * GET /api/v1/hiring-manager/profiles/:profileId/notes
- * Get all notes for a profile
+ * Get all notes for a profile (ownership verified via opening)
  */
 router.get(
   "/profiles/:profileId/notes",
@@ -349,7 +346,21 @@ router.get(
   authorizeRole("HIRING_MANAGER") as RequestHandler,
   async (req: any, res) => {
     try {
+      const { tenantId, id: userId } = req.user;
       const { profileId } = req.params;
+
+      // Verify profile belongs to a hiring manager's opening
+      const profile = await prisma.hiringProfile.findFirst({
+        where: {
+          id: parseInt(profileId),
+          opening: { tenantId, hiringManagerId: userId },
+          isDeleted: false,
+        },
+      });
+
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
 
       const notes = await prisma.profileNote.findMany({
         where: { profileId: parseInt(profileId) },
@@ -366,7 +377,7 @@ router.get(
 
 /**
  * POST /api/v1/hiring-manager/profiles/:profileId/notes
- * Add a note to a profile
+ * Add a note to a profile (ownership verified via opening)
  */
 router.post(
   "/profiles/:profileId/notes",
@@ -374,15 +385,28 @@ router.post(
   authorizeRole("HIRING_MANAGER") as RequestHandler,
   async (req: any, res) => {
     try {
+      const { tenantId, id: userId } = req.user;
       const { profileId } = req.params;
       const { content } = req.body;
-      const userId = req.user.id;
       const userName = req.user.firstName
         ? `${req.user.firstName} ${req.user.lastName || ""}`.trim()
         : req.user.username;
 
       if (!content || content.trim().length === 0) {
         return res.status(400).json({ message: "Content is required" });
+      }
+
+      // Verify profile belongs to a hiring manager's opening
+      const profile = await prisma.hiringProfile.findFirst({
+        where: {
+          id: parseInt(profileId),
+          opening: { tenantId, hiringManagerId: userId },
+          isDeleted: false,
+        },
+      });
+
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
       }
 
       const note = await prisma.profileNote.create({
@@ -404,7 +428,7 @@ router.post(
 
 /**
  * DELETE /api/v1/hiring-manager/profiles/:profileId/notes/:noteId
- * Delete a note
+ * Delete a note (ownership verified via opening + author)
  */
 router.delete(
   "/profiles/:profileId/notes/:noteId",
@@ -412,11 +436,24 @@ router.delete(
   authorizeRole("HIRING_MANAGER") as RequestHandler,
   async (req: any, res) => {
     try {
-      const { noteId } = req.params;
-      const userId = req.user.id;
+      const { tenantId, id: userId } = req.user;
+      const { profileId, noteId } = req.params;
 
-      const note = await prisma.profileNote.findUnique({
-        where: { id: parseInt(noteId) },
+      // Verify profile belongs to a hiring manager's opening
+      const profile = await prisma.hiringProfile.findFirst({
+        where: {
+          id: parseInt(profileId),
+          opening: { tenantId, hiringManagerId: userId },
+          isDeleted: false,
+        },
+      });
+
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+
+      const note = await prisma.profileNote.findFirst({
+        where: { id: parseInt(noteId), profileId: parseInt(profileId) },
       });
 
       if (!note) {

@@ -121,8 +121,20 @@ const openings = [
 ];
 
 async function main() {
-  console.log("Seeding openings...");
+  console.log("Seeding...");
 
+  // Create "Bruce Wayne Corp" tenant (idempotent)
+  const tenant = await prisma.tenants.upsert({
+    where: { tenantId: TENANT_ID },
+    update: {},
+    create: {
+      tenantId: TENANT_ID,
+      companyName: "Bruce Wayne Corp",
+    },
+  });
+  console.log(`Tenant: ${tenant.companyName} (${tenant.tenantId})`);
+
+  // Create openings
   for (const opening of openings) {
     await prisma.opening.create({
       data: {
