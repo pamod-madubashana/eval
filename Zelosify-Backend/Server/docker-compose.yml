@@ -76,8 +76,8 @@ services:
     volumes:
       - minio_data:/data
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9100:9000"
+      - "9101:9001"
     networks:
       - backend_net
     command: server /data --console-address ":9001"
