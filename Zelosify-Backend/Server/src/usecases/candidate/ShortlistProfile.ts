@@ -28,7 +28,8 @@ export class ShortlistProfile {
     const updated = await this.candidateRepo.updateStatus(
       profileId,
       ProfileStatus.SHORTLISTED,
-      userId
+      userId,
+      tenantId
     );
 
     // Send notification to vendor (fire and forget)
@@ -73,7 +74,8 @@ export class RejectProfile {
     const updated = await this.candidateRepo.updateStatus(
       profileId,
       ProfileStatus.REJECTED,
-      userId
+      userId,
+      tenantId
     );
 
     // Send notification to vendor (fire and forget)
@@ -121,7 +123,8 @@ export class UpdateProfileStatus {
     return this.candidateRepo.updateStatus(
       profileId,
       status as ProfileStatus,
-      userId
+      userId,
+      tenantId
     );
   }
 }

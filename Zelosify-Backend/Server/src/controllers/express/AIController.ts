@@ -21,6 +21,7 @@ export class AIController {
 
       const { results, stats } = await runBatchRecommendations(
         openingId,
+        tenantId,
         req.body.useLLM || false
       );
 
@@ -48,6 +49,7 @@ export class AIController {
       const result = await runRecommendationAgent({
         profileId: parseInt(profileId),
         openingId,
+        tenantId,
         useLLM: req.body.useLLM || false,
       });
 

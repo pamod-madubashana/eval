@@ -110,8 +110,9 @@ export class HiringManagerController {
 
   getNotesHandler = async (req: any, res: Response): Promise<void> => {
     try {
+      const { tenantId } = req.user.tenant;
       const { profileId } = req.params;
-      const notes = await this.getNotesUseCase.execute(parseInt(profileId));
+      const notes = await this.getNotesUseCase.execute(parseInt(profileId), tenantId);
       res.json({ notes });
     } catch (error) {
       this.handleError(res, error);
@@ -120,6 +121,7 @@ export class HiringManagerController {
 
   addNoteHandler = async (req: any, res: Response): Promise<void> => {
     try {
+      const { tenantId } = req.user.tenant;
       const { profileId } = req.params;
       const { content } = req.body;
       const userId = req.user.id;
@@ -131,7 +133,8 @@ export class HiringManagerController {
         parseInt(profileId),
         content,
         userId,
-        userName
+        userName,
+        tenantId
       );
 
       res.status(201).json({ message: "Note added successfully", note });
@@ -142,10 +145,11 @@ export class HiringManagerController {
 
   deleteNoteHandler = async (req: any, res: Response): Promise<void> => {
     try {
+      const { tenantId } = req.user.tenant;
       const { noteId } = req.params;
       const userId = req.user.id;
 
-      await this.deleteNoteUseCase.execute(parseInt(noteId), userId);
+      await this.deleteNoteUseCase.execute(parseInt(noteId), userId, tenantId);
       res.json({ message: "Note deleted successfully" });
     } catch (error) {
       this.handleError(res, error);
@@ -154,9 +158,17 @@ export class HiringManagerController {
 
   viewProfile = async (req: any, res: Response): Promise<void> => {
     try {
+      const { tenantId } = req.user.tenant;
       const { profileId } = req.params;
       const profile = await this.candidateRepo.findById(parseInt(profileId));
       if (!profile) {
+        res.status(404).json({ message: "Profile not found" });
+        return;
+      }
+
+      // Verify profile belongs to tenant
+      const opening = await this.candidateRepo.findByIdAndOpening(parseInt(profileId), profile.openingId);
+      if (!opening) {
         res.status(404).json({ message: "Profile not found" });
         return;
       }

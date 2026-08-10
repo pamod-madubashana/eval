@@ -13,6 +13,13 @@ export class PrismaCandidateRepository implements ICandidateRepository {
     return record ? this.toDomain(record) : null;
   }
 
+  async findByIdAndTenant(id: number, tenantId: string): Promise<CandidateProfile | null> {
+    const record = await prisma.hiringProfile.findFirst({
+      where: { id, opening: { tenantId }, isDeleted: false },
+    });
+    return record ? this.toDomain(record) : null;
+  }
+
   async findByIdAndOpening(id: number, openingId: string): Promise<CandidateProfile | null> {
     const record = await prisma.hiringProfile.findFirst({
       where: { id, openingId, isDeleted: false },
@@ -103,7 +110,15 @@ export class PrismaCandidateRepository implements ICandidateRepository {
     });
   }
 
-  async create(data: CreateProfileDTO): Promise<CandidateProfile> {
+  async create(data: CreateProfileDTO, tenantId: string): Promise<CandidateProfile> {
+    // Verify opening belongs to tenant
+    const opening = await prisma.opening.findFirst({
+      where: { id: data.openingId, tenantId },
+    });
+    if (!opening) {
+      throw new Error(`Opening ${data.openingId} not found for tenant`);
+    }
+
     const record = await prisma.hiringProfile.create({
       data: {
         openingId: data.openingId,
@@ -114,7 +129,7 @@ export class PrismaCandidateRepository implements ICandidateRepository {
     return this.toDomain(record);
   }
 
-  async updateStatus(id: number, status: ProfileStatus, userId?: string): Promise<CandidateProfile> {
+  async updateStatus(id: number, status: ProfileStatus, userId?: string, tenantId?: string): Promise<CandidateProfile> {
     const updateData: any = { status };
     if (status === ProfileStatus.SHORTLISTED) {
       updateData.shortlistedBy = userId;
@@ -123,23 +138,39 @@ export class PrismaCandidateRepository implements ICandidateRepository {
       updateData.rejectedBy = userId;
       updateData.rejectedAt = new Date();
     }
+
+    const where: any = { id };
+    if (tenantId) {
+      where.opening = { tenantId };
+    }
+
     const record = await prisma.hiringProfile.update({
-      where: { id },
+      where,
       data: updateData,
     });
     return this.toDomain(record);
   }
 
-  async softDelete(id: number): Promise<void> {
+  async softDelete(id: number, tenantId?: string): Promise<void> {
+    const where: any = { id };
+    if (tenantId) {
+      where.opening = { tenantId };
+    }
+
     await prisma.hiringProfile.update({
-      where: { id },
+      where,
       data: { isDeleted: true },
     });
   }
 
-  async updateRecommendation(id: number, data: RecommendationUpdateDTO): Promise<void> {
+  async updateRecommendation(id: number, data: RecommendationUpdateDTO, tenantId?: string): Promise<void> {
+    const where: any = { id };
+    if (tenantId) {
+      where.opening = { tenantId };
+    }
+
     await prisma.hiringProfile.update({
-      where: { id },
+      where,
       data: {
         recommended: data.recommended,
         recommendationScore: data.recommendationScore,

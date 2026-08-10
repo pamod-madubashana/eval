@@ -1,5 +1,8 @@
 import { Readable } from "stream";
 import { createStorageService } from "../../storage/storageFactory.js";
+import { createLLMProvider } from "../llm/llmFactory.js";
+import { LLMExtractedDataSchema, validateWithRetry } from "../schema.js";
+import { logger } from "../logger.js";
 
 export interface ParsedResume {
   text: string;
@@ -11,6 +14,7 @@ export interface ParsedResume {
   phone: string | null;
   normalizedSkills: string[];
   keywords: string[];
+  llmEnhanced?: boolean;
 }
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
@@ -228,4 +232,103 @@ export async function parseResume(s3Key: string): Promise<ParsedResume> {
     normalizedSkills: skills.map(normalizeSkill),
     keywords: extractKeywords(text),
   };
+}
+
+async function llmExtractFromText(
+  text: string,
+  regexResult: ParsedResume
+): Promise<Partial<ParsedResume> | null> {
+  try {
+    const llm = await createLLMProvider();
+
+    const systemPrompt = `You are a resume parsing assistant. Extract structured data from the resume text below.
+Respond with ONLY a JSON object matching this schema:
+{
+  "skills": ["string"],
+  "experienceYears": number | null,
+  "education": ["string"],
+  "location": "string" | null,
+  "certifications": ["string"],
+  "projects": ["string"]
+}
+
+Focus on extracting skills the regex patterns may have missed, and correcting any inaccurate values.
+The regex extraction found these skills: ${regexResult.skills.join(", ")}
+The regex extraction found experience: ${regexResult.experienceYears || "unknown"} years`;
+
+    const userPrompt = `Resume text (first 5000 chars):
+${text.substring(0, 5000)}`;
+
+    const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+    const result = await llm.generate(fullPrompt, {
+      temperature: 0.1,
+      maxTokens: 1024,
+    });
+
+    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    const validation = validateWithRetry(LLMExtractedDataSchema, parsed);
+
+    if (!validation.success) {
+      logger.warn("LLM extraction schema validation failed", "resume-parser", {
+        error: validation.error,
+      });
+      return null;
+    }
+
+    return validation.data;
+  } catch (error) {
+    logger.warn("LLM extraction failed, using regex-only", "resume-parser", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+export async function enhancedParseResume(s3Key: string): Promise<ParsedResume> {
+  // Step 1: Run regex parsing (fast, deterministic)
+  const regexResult = await parseResume(s3Key);
+
+  // Step 2: Attempt LLM extraction (slower, more comprehensive)
+  const llmResult = await llmExtractFromText(regexResult.text, regexResult);
+
+  if (!llmResult) {
+    // Fallback to regex-only
+    return { ...regexResult, llmEnhanced: false };
+  }
+
+  // Step 3: Merge results (LLM fills gaps, regex is base truth)
+  const mergedSkills = new Set([
+    ...regexResult.skills,
+    ...(llmResult.skills || []),
+  ]);
+
+  const mergedEducation = new Set([
+    ...regexResult.education,
+    ...(llmResult.education || []),
+  ]);
+
+  const result: ParsedResume = {
+    text: regexResult.text,
+    skills: Array.from(mergedSkills),
+    experienceYears: llmResult.experienceYears ?? regexResult.experienceYears,
+    education: Array.from(mergedEducation),
+    location: llmResult.location || regexResult.location,
+    email: regexResult.email, // Keep regex for contact info (more reliable)
+    phone: regexResult.phone,
+    normalizedSkills: Array.from(mergedSkills).map(normalizeSkill),
+    keywords: regexResult.keywords,
+    llmEnhanced: true,
+  };
+
+  logger.info("Resume parsed with LLM enhancement", "resume-parser", {
+    regexSkills: regexResult.skills.length,
+    llmSkills: llmResult.skills?.length || 0,
+    mergedSkills: result.skills.length,
+    experienceYears: result.experienceYears,
+  });
+
+  return result;
 }
