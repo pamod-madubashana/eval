@@ -13,7 +13,9 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import axiosInstance from "@/utils/Axios/AxiosInstance";
+import ConfirmDialog from "@/components/UI/ConfirmDialog";
 
 const statusColors = {
   OPEN: "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-400",
@@ -92,6 +94,7 @@ export default function OpeningDetailsPage() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [error, setError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const fileInputRef = useRef(null);
 
   const fetchOpeningDetails = useCallback(async () => {
@@ -120,11 +123,11 @@ export default function OpeningDetailsPage() {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
     if (!allowedTypes.includes(file.type)) {
-      alert("Only PDF, PPTX, and DOCX files are allowed");
+      toast.error("Only PDF, PPTX, and DOCX files are allowed");
       return false;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert("File size must be less than 10MB");
+      toast.error("File size must be less than 10MB");
       return false;
     }
     return true;
@@ -175,20 +178,27 @@ export default function OpeningDetailsPage() {
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (error) {
       console.error("Error uploading profiles:", error);
-      alert("Failed to upload profiles. Please try again.");
+      toast.error("Failed to upload profiles. Please try again.");
     } finally {
       setUploading(false);
     }
   };
 
   const handleDeleteProfile = async (profileId) => {
-    if (!confirm("Are you sure you want to delete this profile?")) return;
+    setDeleteTarget(profileId);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await axiosInstance.delete(`/vendor/openings/${params.id}/profiles/${profileId}`);
+      await axiosInstance.delete(`/vendor/openings/${params.id}/profiles/${deleteTarget}`);
+      toast.success("Profile deleted successfully");
       fetchOpeningDetails();
     } catch (error) {
       console.error("Error deleting profile:", error);
-      alert("Failed to delete profile.");
+      toast.error("Failed to delete profile");
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -339,6 +349,16 @@ export default function OpeningDetailsPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete Profile"
+        description="Are you sure you want to delete this profile? This action cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

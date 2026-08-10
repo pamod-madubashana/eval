@@ -16,8 +16,12 @@ import {
   Clock,
   Brain,
   AlertTriangle,
+  Eye,
+  User,
 } from "lucide-react";
 import axiosInstance from "@/utils/Axios/AxiosInstance";
+import { toast } from "sonner";
+import ConfirmDialog from "@/components/UI/ConfirmDialog";
 
 const statusColors = {
   OPEN: "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-400",
@@ -107,6 +111,7 @@ export default function ManagerOpeningDetailsPage() {
   const [notesLoading, setNotesLoading] = useState(false);
   const [addingNote, setAddingNote] = useState(false);
   const [error, setError] = useState(null);
+  const [deleteNoteTarget, setDeleteNoteTarget] = useState(null);
 
   const fetchOpeningDetails = useCallback(async () => {
     try {
@@ -148,20 +153,27 @@ export default function ManagerOpeningDetailsPage() {
       fetchNotes(selectedProfileId);
     } catch (error) {
       console.error("Error adding note:", error);
-      alert("Failed to add note");
+      toast.error("Failed to add note");
     } finally {
       setAddingNote(false);
     }
   };
 
   const handleDeleteNote = async (noteId) => {
-    if (!confirm("Delete this note?")) return;
+    setDeleteNoteTarget(noteId);
+  };
+
+  const confirmDeleteNote = async () => {
+    if (!deleteNoteTarget) return;
     try {
-      await axiosInstance.delete(`/hiring-manager/profiles/${selectedProfileId}/notes/${noteId}`);
+      await axiosInstance.delete(`/hiring-manager/profiles/${selectedProfileId}/notes/${deleteNoteTarget}`);
+      toast.success("Note deleted");
       fetchNotes(selectedProfileId);
     } catch (error) {
       console.error("Error deleting note:", error);
-      alert("Failed to delete note");
+      toast.error("Failed to delete note");
+    } finally {
+      setDeleteNoteTarget(null);
     }
   };
 
@@ -169,10 +181,11 @@ export default function ManagerOpeningDetailsPage() {
     try {
       setActionLoading(profileId);
       await axiosInstance.patch(`/hiring-manager/openings/${params.id}/profiles/${profileId}/shortlist`);
+      toast.success("Profile shortlisted");
       fetchOpeningDetails();
     } catch (error) {
       console.error("Error shortlisting profile:", error);
-      alert("Failed to shortlist profile");
+      toast.error("Failed to shortlist profile");
     } finally {
       setActionLoading(null);
     }
@@ -182,12 +195,32 @@ export default function ManagerOpeningDetailsPage() {
     try {
       setActionLoading(profileId);
       await axiosInstance.patch(`/hiring-manager/openings/${params.id}/profiles/${profileId}/reject`);
+      toast.success("Profile rejected");
       fetchOpeningDetails();
     } catch (error) {
       console.error("Error rejecting profile:", error);
-      alert("Failed to reject profile");
+      toast.error("Failed to reject profile");
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleViewProfile = async (profileId) => {
+    try {
+      const response = await axiosInstance.get(`/hiring-manager/profiles/${profileId}/view`);
+      const { url } = response.data;
+      if (url) {
+        window.open(url, "_blank");
+      } else {
+        toast.error("File not available. The profile may need to be re-uploaded.");
+      }
+    } catch (error) {
+      console.error("Error viewing profile:", error);
+      if (error.response?.status === 404) {
+        toast.error("File not found. The profile may need to be re-uploaded.");
+      } else {
+        toast.error("Failed to load profile");
+      }
     }
   };
 
@@ -303,6 +336,12 @@ export default function ManagerOpeningDetailsPage() {
                             <p className="text-xs text-muted-foreground">
                               Submitted {new Date(profile.submittedAt).toLocaleDateString()}
                             </p>
+                            {(profile.uploaderName || profile.uploadedBy) && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <User className="w-3 h-3" />
+                                {profile.uploaderName || profile.uploadedBy}
+                              </p>
+                            )}
                             {profile.recommendationScore !== null && (
                               <div className="flex items-center gap-3 mt-1">
                                 <p className="text-xs text-blue-600 flex items-center gap-1">
@@ -338,6 +377,13 @@ export default function ManagerOpeningDetailsPage() {
                           <span className={`px-2 py-1 text-xs rounded-full ${profileStatusColors[profile.status] || "bg-gray-50"}`}>
                             {profile.status}
                           </span>
+                          <button
+                            onClick={() => handleViewProfile(profile.id)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            title="View Profile"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => fetchNotes(profile.id)}
                             className={`p-2 rounded-md transition-colors ${
@@ -429,6 +475,16 @@ export default function ManagerOpeningDetailsPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteNoteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteNoteTarget(null); }}
+        title="Delete Note"
+        description="Are you sure you want to delete this note?"
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={confirmDeleteNote}
+      />
     </div>
   );
 }
