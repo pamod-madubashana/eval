@@ -34,7 +34,7 @@ const storageService = getStorageService();
 
 // ─── Use Cases ───────────────────────────────────────────────────
 const listOpenings = new ListOpenings(openingRepo, candidateRepo);
-const getOpeningDetails = new GetOpeningDetails(openingRepo, candidateRepo);
+const getOpeningDetails = new GetOpeningDetails(openingRepo, candidateRepo, userRepo);
 const submitProfile = new SubmitProfile(candidateRepo, openingRepo, storageService);
 const generatePresignedUrl = new GeneratePresignedUrl(openingRepo);
 const deleteProfile = new DeleteProfile(candidateRepo, openingRepo);
@@ -52,7 +52,8 @@ export const vendorController = new VendorController(listOpenings, getOpeningDet
 export const profileController = new ProfileController(submitProfile, generatePresignedUrl, deleteProfile);
 export const hiringManagerController = new HiringManagerController(
   listOpenings, getOpeningDetails, shortlistProfile, rejectProfile,
-  updateProfileStatus, getNotes, addNote, deleteNote
+  updateProfileStatus, getNotes, addNote, deleteNote,
+  candidateRepo, storageService
 );
 export const aiController = new AIController(openingRepo);
 export const analyticsController = new AnalyticsController(getDashboardStats);

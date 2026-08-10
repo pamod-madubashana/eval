@@ -27,6 +27,14 @@ router.get(
   hiringManagerController.getOpeningDetailsHandler
 );
 
+// ─── Profile View Route ──────────────────────────────────────────
+router.get(
+  "/profiles/:profileId/view",
+  authenticateUser,
+  authorizeRole("HIRING_MANAGER"),
+  hiringManagerController.viewProfile
+);
+
 // ─── Profile Status Routes ───────────────────────────────────────
 router.patch(
   "/openings/:openingId/profiles/:profileId/shortlist",

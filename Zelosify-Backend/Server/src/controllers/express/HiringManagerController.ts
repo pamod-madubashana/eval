@@ -10,6 +10,8 @@ import {
 } from "../../usecases/candidate/ShortlistProfile.js";
 import { GetNotes, AddNote, DeleteNote } from "../../usecases/candidate/ManageNotes.js";
 import { DomainError } from "../../domain/errors/index.js";
+import { IStorageService } from "../../ports/services/IStorageService.js";
+import { ICandidateRepository } from "../../ports/repositories/ICandidateRepository.js";
 
 export class HiringManagerController {
   constructor(
@@ -20,7 +22,9 @@ export class HiringManagerController {
     private updateProfileStatusUseCase: UpdateProfileStatus,
     private getNotesUseCase: GetNotes,
     private addNoteUseCase: AddNote,
-    private deleteNoteUseCase: DeleteNote
+    private deleteNoteUseCase: DeleteNote,
+    private candidateRepo: ICandidateRepository,
+    private storageService: IStorageService
   ) {}
 
   listOpenings = async (req: any, res: Response): Promise<void> => {
@@ -30,7 +34,7 @@ export class HiringManagerController {
       const limit = parseInt(req.query.limit as string) || 10;
 
       const result = await this.listOpeningsUseCase.execute({ tenantId, page, limit });
-      res.json(result);
+      res.json({ openings: result.items, pagination: result.pagination });
     } catch (error) {
       this.handleError(res, error);
     }
@@ -143,6 +147,26 @@ export class HiringManagerController {
 
       await this.deleteNoteUseCase.execute(parseInt(noteId), userId);
       res.json({ message: "Note deleted successfully" });
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  };
+
+  viewProfile = async (req: any, res: Response): Promise<void> => {
+    try {
+      const { profileId } = req.params;
+      const profile = await this.candidateRepo.findById(parseInt(profileId));
+      if (!profile) {
+        res.status(404).json({ message: "Profile not found" });
+        return;
+      }
+
+      try {
+        const url = await this.storageService.getObjectURL(profile.s3Key);
+        res.json({ url });
+      } catch {
+        res.status(404).json({ message: "File not found in storage. The file may not have been uploaded yet." });
+      }
     } catch (error) {
       this.handleError(res, error);
     }
