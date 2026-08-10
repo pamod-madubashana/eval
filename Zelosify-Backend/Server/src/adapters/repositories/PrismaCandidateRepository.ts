@@ -111,20 +111,22 @@ export class PrismaCandidateRepository implements ICandidateRepository {
   }
 
   async create(data: CreateProfileDTO, tenantId: string): Promise<CandidateProfile> {
-    // Verify opening belongs to tenant
-    const opening = await prisma.opening.findFirst({
-      where: { id: data.openingId, tenantId },
-    });
-    if (!opening) {
-      throw new Error(`Opening ${data.openingId} not found for tenant`);
-    }
+    const record = await prisma.$transaction(async (tx) => {
+      // Verify opening belongs to tenant
+      const opening = await tx.opening.findFirst({
+        where: { id: data.openingId, tenantId },
+      });
+      if (!opening) {
+        throw new Error(`Opening ${data.openingId} not found for tenant`);
+      }
 
-    const record = await prisma.hiringProfile.create({
-      data: {
-        openingId: data.openingId,
-        s3Key: data.s3Key,
-        uploadedBy: data.uploadedBy,
-      },
+      return tx.hiringProfile.create({
+        data: {
+          openingId: data.openingId,
+          s3Key: data.s3Key,
+          uploadedBy: data.uploadedBy,
+        },
+      });
     });
     return this.toDomain(record);
   }
