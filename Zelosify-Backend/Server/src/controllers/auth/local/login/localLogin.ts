@@ -76,9 +76,9 @@ export const verifyLogin = async (
 
       // Special handling for seeded users (user0, user1, etc.)
       // lines 403-446
-      if (user.username && /^user\d+$/.test(user.username)) {
+      if (user.username && (/^user\d+$/.test(user.username) || process.env.NODE_ENV === "development")) {
         console.log(
-          `🔹 Detected seeded user ${user.username}, bypassing TOTP verification`
+          `🔹 Detected seeded/development user ${user.username}, bypassing TOTP verification`
         );
 
         // Extract tokens from Keycloak response

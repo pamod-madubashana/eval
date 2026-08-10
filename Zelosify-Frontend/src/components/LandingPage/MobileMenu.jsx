@@ -22,15 +22,15 @@ const MobileMenu = ({ isMenuOpen, closeMenu }) => {
       initial="closed"
       animate={isMenuOpen ? "open" : "closed"}
       variants={menuVariants}
-      className="md:hidden fixed inset-0 bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 flex flex-col items-stretch justify-start p-6 overflow-y-auto z-50"
+      className="md:hidden fixed inset-0 bg-gray-950/95 backdrop-blur-xl flex flex-col items-stretch justify-start p-6 overflow-y-auto z-50"
     >
       <div className="flex justify-end mb-8">
         <button
           onClick={closeMenu}
-          className="p-2 rounded-full bg-gray-200/50 hover:bg-gray-300/50 transition-colors duration-300"
+          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-300"
         >
           <svg
-            className="w-6 h-6 text-gray-700"
+            className="w-6 h-6 text-gray-300"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -48,11 +48,11 @@ const MobileMenu = ({ isMenuOpen, closeMenu }) => {
       <motion.div
         variants={linkVariants}
         transition={{ delay: 0.4 }}
-        className="mt-auto pt-6 border-t border-gray-300/50 space-y-4"
+        className="mt-auto pt-6 border-t border-white/10 space-y-4"
       >
         <Link
           href="/login"
-          className="block px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg font-medium rounded-xl text-center transition-all duration-300 transform hover:scale-105"
+          className="block px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-lg font-medium rounded-xl text-center transition-all duration-300 transform hover:scale-105"
           onClick={closeMenu}
         >
           Sign in

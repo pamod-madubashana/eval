@@ -25,6 +25,7 @@ export class AwsStorageService extends StorageService {
     const accessKeyId = process.env.S3_ACCESS_KEY_ID;
     const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
     const bucketName = process.env.S3_BUCKET_NAME;
+    const endpoint = process.env.S3_ENDPOINT || `https://s3.${region}.amazonaws.com`;
 
     if (!region || !accessKeyId || !secretAccessKey || !bucketName) {
       throw new Error("Missing required AWS S3 configuration");
@@ -36,7 +37,7 @@ export class AwsStorageService extends StorageService {
         accessKeyId,
         secretAccessKey,
       },
-      endpoint: `https://s3.${region}.amazonaws.com`,
+      endpoint,
       forcePathStyle: true,
     });
 
@@ -46,7 +47,7 @@ export class AwsStorageService extends StorageService {
     console.log("[AWS S3] Initialized with:", {
       region,
       bucket: bucketName,
-      endpoint: `https://s3.${region}.amazonaws.com`,
+      endpoint,
       hasCredentials: !!accessKeyId && !!secretAccessKey,
     });
   }

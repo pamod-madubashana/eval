@@ -4,9 +4,9 @@
   "description": "Nextjs Recruit Frontend for whole service",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 5173",
+    "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "next start -p 5173",
+    "start": "next start -p 3000",
     "lint": "next lint"
   },
   "dependencies": {

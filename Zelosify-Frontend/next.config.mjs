@@ -13,7 +13,7 @@ const nextConfig = {
     // Updated serverActions to be an object instead of boolean
     serverActions: {
       bodySizeLimit: "2mb",
-      allowedOrigins: ["localhost:5173"],
+      allowedOrigins: ["localhost:3000"],
     },
   },
 

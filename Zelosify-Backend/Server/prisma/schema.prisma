@@ -44,6 +44,7 @@ model Tenants {
   updatedAt           DateTime  @updatedAt
 
   users               User[]
+  openings            Opening[]
 }
 
 enum AuthProvider {
@@ -62,4 +63,84 @@ enum Role {
   PROCUREMENT_MANAGER
   RESOURCE_MANAGER
   VENDOR_MANAGER
+}
+
+enum OpeningStatus {
+  OPEN
+  CLOSED
+  ON_HOLD
+}
+
+enum ProfileStatus {
+  SUBMITTED
+  SHORTLISTED
+  REJECTED
+}
+
+model Opening {
+  id                      String   @id @default(uuid())
+  tenantId                String
+  title                   String
+  description             String?
+  location                String?
+  contractType            String?
+  hiringManagerId         String
+
+  experienceMin           Int
+  experienceMax           Int?
+  postedDate              DateTime @default(now())
+  expectedCompletionDate  DateTime?
+  actionDate              DateTime?
+  status                  OpeningStatus @default(OPEN)
+
+  tenant                  Tenants @relation(fields: [tenantId], references: [tenantId])
+  hiringProfiles          hiringProfile[]
+
+  @@index([tenantId])
+}
+
+model hiringProfile {
+  id                        Int       @id @default(autoincrement())
+  openingId                 String
+  s3Key                     String    @unique
+  uploadedBy                String
+  submittedAt               DateTime  @default(now())
+  status                    ProfileStatus  @default(SUBMITTED)
+
+  shortlistedBy             String?
+  shortlistedAt             DateTime?
+  rejectedBy                String?
+  rejectedAt                DateTime?
+
+  // AI Agent Fields
+  recommended               Boolean?
+  recommendationScore       Float?
+  recommendationReason      String?
+  recommendationLatencyMs   Int?
+  recommendationVersion     String?
+  recommendationConfidence  Float?
+  recommendedAt             DateTime?
+
+  isDeleted                 Boolean    @default(false)
+
+  opening                   Opening    @relation(fields: [openingId], references: [id])
+  notes                     ProfileNote[]
+
+  @@index([openingId])
+  @@index([recommended])
+}
+
+model ProfileNote {
+  id          Int      @id @default(autoincrement())
+  profileId   Int
+  content     String
+  authorId    String
+  authorName  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  profile     hiringProfile @relation(fields: [profileId], references: [id])
+
+  @@index([profileId])
+  @@index([authorId])
 }

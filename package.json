@@ -1,0 +1,20 @@
+{
+  "name": "zelosify",
+  "version": "1.0.0",
+  "description": "Zelosify monorepo - frontend and backend",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd Zelosify-Backend/Server && npm install && cd ../../Zelosify-Frontend && npm install",
+    "dev": "concurrently -n back,front -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd Zelosify-Backend/Server && npm run dev",
+    "dev:frontend": "cd Zelosify-Frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd Zelosify-Backend/Server && npm run build",
+    "build:frontend": "cd Zelosify-Frontend && npm run build",
+    "lint": "npm run lint:frontend",
+    "lint:frontend": "cd Zelosify-Frontend && npm run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

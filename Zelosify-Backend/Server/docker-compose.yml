@@ -2,7 +2,7 @@ name: zelosify-recruit-backend
 
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:16
     container_name: recruit-postgres
     restart: unless-stopped
     environment:
@@ -51,7 +51,7 @@ services:
     volumes:
       - keycloak_data:/opt/keycloak/data
     ports:
-      - "8080:8080"
+      - "8180:8080"
     command:
       - start-dev
       - --http-enabled=true
@@ -67,6 +67,26 @@ services:
       timeout: 10s
       retries: 3
 
+  minio:
+    image: minio/minio:latest
+    container_name: recruit-minio
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9100:9000"
+      - "9101:9001"
+    networks:
+      - backend_net
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 networks:
   backend_net:
     driver: bridge
@@ -75,4 +95,6 @@ volumes:
   keycloak_data:
     driver: local
   postgres_data:
+    driver: local
+  minio_data:
     driver: local
