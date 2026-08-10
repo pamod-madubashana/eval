@@ -61,7 +61,6 @@ const SKILL_SYNONYMS: Record<string, string> = {
   js: "JavaScript",
   ts: "TypeScript",
   reactjs: "React",
-  reactjs: "React",
   nodejs: "Node.js",
   node: "Node.js",
   vuejs: "Vue.js",

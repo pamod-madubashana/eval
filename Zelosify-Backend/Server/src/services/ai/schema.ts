@@ -98,7 +98,7 @@ export function validateWithRetry<T>(
     if (result.success) {
       return { success: true, data: result.data };
     }
-    lastError = result.error.errors.map((e) => e.message).join(", ");
+    lastError = result.error.issues.map((e: any) => e.message).join(", ");
     if (attempt < maxRetries) {
       console.warn(`[Schema] Validation attempt ${attempt + 1} failed: ${lastError}`);
     }

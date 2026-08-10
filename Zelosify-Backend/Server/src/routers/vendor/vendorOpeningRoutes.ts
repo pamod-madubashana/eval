@@ -92,7 +92,8 @@ router.get(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Resolve hiring manager name
@@ -141,9 +142,8 @@ router.post(
       const { fileName, contentType } = req.body;
 
       if (!fileName || !contentType) {
-        return res
-          .status(400)
-          .json({ message: "fileName and contentType are required" });
+        res.status(400).json({ message: "fileName and contentType are required" });
+        return;
       }
 
       // Verify opening exists and belongs to tenant
@@ -152,7 +152,8 @@ router.post(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Generate S3 key
@@ -207,7 +208,8 @@ router.post(
       const { s3Key } = req.body;
 
       if (!s3Key) {
-        return res.status(400).json({ message: "s3Key is required" });
+        res.status(400).json({ message: "s3Key is required" });
+        return;
       }
 
       // Verify opening exists and belongs to tenant
@@ -216,7 +218,8 @@ router.post(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Create profile record in transaction
@@ -277,7 +280,8 @@ router.delete(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Verify profile exists and was uploaded by this user
@@ -291,7 +295,8 @@ router.delete(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       // Soft delete

@@ -118,7 +118,8 @@ router.get(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       res.json(opening);
@@ -147,7 +148,8 @@ router.patch(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       const profile = await prisma.hiringProfile.findFirst({
@@ -159,7 +161,8 @@ router.patch(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       const updatedProfile = await prisma.hiringProfile.update({
@@ -216,7 +219,8 @@ router.patch(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       const profile = await prisma.hiringProfile.findFirst({
@@ -228,7 +232,8 @@ router.patch(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       const updatedProfile = await prisma.hiringProfile.update({
@@ -287,7 +292,8 @@ router.patch(
       const { status } = req.body;
 
       if (!["SUBMITTED", "SHORTLISTED", "REJECTED"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
+        res.status(400).json({ message: "Invalid status" });
+        return;
       }
 
       const opening = await prisma.opening.findFirst({
@@ -295,7 +301,8 @@ router.patch(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       const profile = await prisma.hiringProfile.findFirst({
@@ -307,7 +314,8 @@ router.patch(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       const updateData: any = { status };
@@ -359,7 +367,8 @@ router.get(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       const notes = await prisma.profileNote.findMany({
@@ -393,7 +402,8 @@ router.post(
         : req.user.username;
 
       if (!content || content.trim().length === 0) {
-        return res.status(400).json({ message: "Content is required" });
+        res.status(400).json({ message: "Content is required" });
+        return;
       }
 
       // Verify profile belongs to a hiring manager's opening
@@ -406,7 +416,8 @@ router.post(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       const note = await prisma.profileNote.create({
@@ -449,7 +460,8 @@ router.delete(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       const note = await prisma.profileNote.findFirst({
@@ -457,14 +469,14 @@ router.delete(
       });
 
       if (!note) {
-        return res.status(404).json({ message: "Note not found" });
+        res.status(404).json({ message: "Note not found" });
+        return;
       }
 
       // Only allow author to delete their own notes
       if (note.authorId !== userId) {
-        return res
-          .status(403)
-          .json({ message: "You can only delete your own notes" });
+        res.status(403).json({ message: "You can only delete your own notes" });
+        return;
       }
 
       await prisma.profileNote.delete({
