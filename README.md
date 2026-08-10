@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License">
 </p>
 
-Multi-tenant contract hiring backend with AI candidate recommendation, strict RBAC, tenant isolation, and performance SLAs.
+<p align="center">Multi-tenant contract hiring backend with AI candidate recommendation, strict RBAC, tenant isolation, and performance SLAs.</p>
 
 ## Storage
 
