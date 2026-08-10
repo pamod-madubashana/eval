@@ -62,7 +62,7 @@ router.get(
 
 /**
  * GET /vendor/openings/:id
- * Fetch opening details with profiles
+ * Fetch opening details with profiles, hiring manager name, and count
  */
 router.get(
   "/:id",
@@ -80,14 +80,45 @@ router.get(
             where: { isDeleted: false, uploadedBy: req.user.id },
             orderBy: { submittedAt: "desc" },
           },
+          tenant: {
+            select: {
+              users: {
+                where: { id: undefined },
+                select: { id: true, firstName: true, lastName: true, username: true },
+              },
+            },
+          },
         },
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
-      res.json(opening);
+      // Resolve hiring manager name
+      const hiringManager = await prisma.user.findUnique({
+        where: { id: opening.hiringManagerId },
+        select: { firstName: true, lastName: true, username: true },
+      });
+
+      const hiringManagerName = hiringManager
+        ? hiringManager.firstName
+          ? `${hiringManager.firstName} ${hiringManager.lastName || ""}`.trim()
+          : hiringManager.username || "Unknown"
+        : "Unknown";
+
+      // Get total profiles count for this opening (not just vendor's)
+      const totalProfilesCount = await prisma.hiringProfile.count({
+        where: { openingId: id, isDeleted: false },
+      });
+
+      res.json({
+        ...opening,
+        hiringManagerName,
+        profilesCount: totalProfilesCount,
+        tenant: undefined,
+      });
     } catch (error) {
       console.error("Error fetching opening details:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -111,9 +142,8 @@ router.post(
       const { fileName, contentType } = req.body;
 
       if (!fileName || !contentType) {
-        return res
-          .status(400)
-          .json({ message: "fileName and contentType are required" });
+        res.status(400).json({ message: "fileName and contentType are required" });
+        return;
       }
 
       // Verify opening exists and belongs to tenant
@@ -122,7 +152,8 @@ router.post(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Generate S3 key
@@ -177,7 +208,8 @@ router.post(
       const { s3Key } = req.body;
 
       if (!s3Key) {
-        return res.status(400).json({ message: "s3Key is required" });
+        res.status(400).json({ message: "s3Key is required" });
+        return;
       }
 
       // Verify opening exists and belongs to tenant
@@ -186,7 +218,8 @@ router.post(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Create profile record in transaction
@@ -203,7 +236,7 @@ router.post(
       });
 
       // Auto-trigger recommendation agent
-      runAgent({ profileId: profile.id, openingId, useLLM: false })
+      runAgent({ profileId: profile.id, openingId, tenantId, useLLM: false })
         .then((result) => {
           logger.info("Auto-recommendation complete", "vendor-upload", {
             profileId: profile.id,
@@ -247,7 +280,8 @@ router.delete(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Verify profile exists and was uploaded by this user
@@ -261,7 +295,8 @@ router.delete(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       // Soft delete

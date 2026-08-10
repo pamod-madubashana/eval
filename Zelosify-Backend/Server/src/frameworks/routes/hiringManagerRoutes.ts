@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { authenticateUser } from "../../middlewares/auth/authenticateMiddleware.js";
 import { authorizeRole } from "../../middlewares/auth/authorizeMiddleware.js";
+import { validateBody, validateParams } from "../../middlewares/validation/validateRequest.js";
+import {
+  NoteRequestSchema,
+  StatusUpdateRequestSchema,
+} from "../../services/ai/schema.js";
 import { hiringManagerController } from "../di/container.js";
 
 const router = Router();
@@ -54,6 +59,7 @@ router.patch(
   "/openings/:openingId/profiles/:profileId/status",
   authenticateUser,
   authorizeRole("HIRING_MANAGER"),
+  validateBody(StatusUpdateRequestSchema),
   hiringManagerController.updateStatus
 );
 
@@ -69,6 +75,7 @@ router.post(
   "/profiles/:profileId/notes",
   authenticateUser,
   authorizeRole("HIRING_MANAGER"),
+  validateBody(NoteRequestSchema),
   hiringManagerController.addNoteHandler
 );
 

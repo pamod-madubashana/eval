@@ -2,6 +2,7 @@ import { CandidateProfile, ProfileStatus } from "../../domain/entities/index.js"
 
 export interface ICandidateRepository {
   findById(id: number): Promise<CandidateProfile | null>;
+  findByIdAndTenant(id: number, tenantId: string): Promise<CandidateProfile | null>;
   findByIdAndOpening(id: number, openingId: string): Promise<CandidateProfile | null>;
   findByOpening(openingId: string, options: ProfileQueryOptions): Promise<CandidateProfile[]>;
   findByUploader(openingId: string, userId: string): Promise<CandidateProfile[]>;
@@ -10,10 +11,12 @@ export interface ICandidateRepository {
   countRecommendedByOpening(openingId: string): Promise<number>;
   avgScoreByTenant(tenantId: string): Promise<number>;
   countRecentByTenant(tenantId: string, since: Date): Promise<number>;
-  create(data: CreateProfileDTO): Promise<CandidateProfile>;
-  updateStatus(id: number, status: ProfileStatus, userId?: string): Promise<CandidateProfile>;
-  softDelete(id: number): Promise<void>;
-  updateRecommendation(id: number, data: RecommendationUpdateDTO): Promise<void>;
+  countByStatusForTenant(tenantId: string): Promise<{ status: string; count: number }[]>;
+  countTotalRecommendedByTenant(tenantId: string): Promise<number>;
+  create(data: CreateProfileDTO, tenantId: string): Promise<CandidateProfile>;
+  updateStatus(id: number, status: ProfileStatus, userId?: string, tenantId?: string): Promise<CandidateProfile>;
+  softDelete(id: number, tenantId?: string): Promise<void>;
+  updateRecommendation(id: number, data: RecommendationUpdateDTO, tenantId?: string): Promise<void>;
 }
 
 export interface ProfileQueryOptions {

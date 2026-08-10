@@ -58,7 +58,7 @@ export class ProfileController {
       });
 
       // Auto-trigger recommendation agent (fire and forget)
-      runAgent({ profileId: profile.id, openingId, useLLM: false })
+      runAgent({ profileId: profile.id, openingId, tenantId, useLLM: false })
         .then((result) => {
           logger.info("Auto-recommendation complete", "vendor-upload", {
             profileId: profile.id,

@@ -11,6 +11,17 @@ export class PrismaNoteRepository implements INoteRepository {
     return records.map((r) => this.toDomain(r));
   }
 
+  async findByProfileAndTenant(profileId: number, tenantId: string): Promise<ProfileNote[]> {
+    const records = await prisma.profileNote.findMany({
+      where: {
+        profileId,
+        profile: { opening: { tenantId } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return records.map((r) => this.toDomain(r));
+  }
+
   async findById(id: number): Promise<ProfileNote | null> {
     const record = await prisma.profileNote.findUnique({ where: { id } });
     return record ? this.toDomain(record) : null;
@@ -30,6 +41,16 @@ export class PrismaNoteRepository implements INoteRepository {
 
   async delete(id: number): Promise<void> {
     await prisma.profileNote.delete({ where: { id } });
+  }
+
+  async verifyProfileBelongsToTenant(profileId: number, tenantId: string): Promise<boolean> {
+    const count = await prisma.hiringProfile.count({
+      where: {
+        id: profileId,
+        opening: { tenantId },
+      },
+    });
+    return count > 0;
   }
 
   private toDomain(record: any): ProfileNote {

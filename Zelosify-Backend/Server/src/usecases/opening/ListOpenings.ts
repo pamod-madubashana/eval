@@ -8,6 +8,7 @@ export interface ListOpeningsInput {
   tenantId: string;
   page: number;
   limit: number;
+  hiringManagerId?: string;
 }
 
 export class ListOpenings {
@@ -20,6 +21,7 @@ export class ListOpenings {
     const result = await this.openingRepo.findByTenant(input.tenantId, {
       page: input.page,
       limit: input.limit,
+      hiringManagerId: input.hiringManagerId,
     });
 
     const openingsWithStats = await Promise.all(
@@ -58,6 +60,15 @@ export class GetOpeningDetails {
       throw new NotFoundError("Opening", openingId);
     }
 
+    // Resolve hiring manager name
+    let hiringManagerName: string | undefined;
+    if (this.userRepo) {
+      const manager = await this.userRepo.findById(opening.hiringManagerId);
+      if (manager) {
+        hiringManagerName = manager.displayName;
+      }
+    }
+
     // Vendor sees only their own profiles; manager sees all
     const profiles = userId
       ? await this.candidateRepo.findByUploader(openingId, userId)
@@ -80,6 +91,7 @@ export class GetOpeningDetails {
 
     return {
       ...opening.toJSON(),
+      hiringManagerName,
       hiringProfiles: profilesEnriched,
     };
   }

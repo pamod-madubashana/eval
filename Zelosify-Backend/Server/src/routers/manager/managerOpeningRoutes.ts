@@ -91,7 +91,8 @@ router.get(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       res.json(opening);
@@ -121,7 +122,8 @@ router.patch(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Verify profile exists
@@ -134,7 +136,8 @@ router.patch(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       // Update profile status
@@ -177,7 +180,8 @@ router.patch(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Verify profile exists
@@ -190,7 +194,8 @@ router.patch(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       // Update profile status
@@ -229,7 +234,8 @@ router.patch(
       const { status } = req.body;
 
       if (!["SUBMITTED", "SHORTLISTED", "REJECTED"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
+        res.status(400).json({ message: "Invalid status" });
+        return;
       }
 
       // Verify opening exists and belongs to tenant
@@ -238,7 +244,8 @@ router.patch(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Verify profile exists
@@ -251,7 +258,8 @@ router.patch(
       });
 
       if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+        res.status(404).json({ message: "Profile not found" });
+        return;
       }
 
       // Update profile status

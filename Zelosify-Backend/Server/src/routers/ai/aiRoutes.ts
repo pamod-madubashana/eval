@@ -27,7 +27,8 @@ router.post(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       const { results, stats } = await runBatchRecommendations(
@@ -66,13 +67,15 @@ router.post(
       });
 
       if (!opening) {
-        return res.status(404).json({ message: "Opening not found" });
+        res.status(404).json({ message: "Opening not found" });
+        return;
       }
 
       // Run recommendation for single profile
       const result = await runRecommendationAgent({
         profileId: parseInt(profileId),
         openingId,
+        tenantId,
         useLLM: req.body.useLLM || false,
       });
 

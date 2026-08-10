@@ -121,18 +121,37 @@ const openings = [
 ];
 
 async function main() {
-  console.log("Seeding openings...");
+  console.log("Seeding...");
 
+  // Create "Bruce Wayne Corp" tenant (idempotent)
+  const tenant = await prisma.tenants.upsert({
+    where: { tenantId: TENANT_ID },
+    update: {},
+    create: {
+      tenantId: TENANT_ID,
+      companyName: "Bruce Wayne Corp",
+    },
+  });
+  console.log(`Tenant: ${tenant.companyName} (${tenant.tenantId})`);
+
+  // Create openings (idempotent - skip if already exists)
   for (const opening of openings) {
-    await prisma.opening.create({
-      data: {
-        tenantId: TENANT_ID,
-        hiringManagerId: HIRING_MANAGER_ID,
-        ...opening,
-        status: OpeningStatus.OPEN,
-      },
+    const existing = await prisma.opening.findFirst({
+      where: { tenantId: TENANT_ID, title: opening.title },
     });
-    console.log(`Created: ${opening.title}`);
+    if (!existing) {
+      await prisma.opening.create({
+        data: {
+          tenantId: TENANT_ID,
+          hiringManagerId: HIRING_MANAGER_ID,
+          ...opening,
+          status: OpeningStatus.OPEN,
+        },
+      });
+      console.log(`Created: ${opening.title}`);
+    } else {
+      console.log(`Skipped (exists): ${opening.title}`);
+    }
   }
 
   console.log(`\nSeeded ${openings.length} openings successfully!`);

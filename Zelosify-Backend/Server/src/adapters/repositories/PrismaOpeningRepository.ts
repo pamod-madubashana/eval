@@ -23,14 +23,18 @@ export class PrismaOpeningRepository implements IOpeningRepository {
     options: PaginationOptions
   ): Promise<PaginatedResult<Opening>> {
     const skip = (options.page - 1) * options.limit;
+    const where: any = { tenantId };
+    if (options.hiringManagerId) {
+      where.hiringManagerId = options.hiringManagerId;
+    }
     const [records, total] = await Promise.all([
       prisma.opening.findMany({
-        where: { tenantId },
+        where,
         orderBy: { postedDate: "desc" },
         skip,
         take: options.limit,
       }),
-      prisma.opening.count({ where: { tenantId } }),
+      prisma.opening.count({ where }),
     ]);
 
     return {

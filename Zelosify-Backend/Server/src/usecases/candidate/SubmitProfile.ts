@@ -28,7 +28,7 @@ export class SubmitProfile {
       openingId: input.openingId,
       s3Key: input.s3Key,
       uploadedBy: input.userId,
-    });
+    }, input.tenantId);
 
     return profile;
   }
@@ -100,6 +100,6 @@ export class DeleteProfile {
       throw new ValidationError("You can only delete your own profiles");
     }
 
-    await this.candidateRepo.softDelete(profileId);
+    await this.candidateRepo.softDelete(profileId, tenantId);
   }
 }
