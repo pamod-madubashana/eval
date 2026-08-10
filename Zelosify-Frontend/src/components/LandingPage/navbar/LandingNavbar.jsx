@@ -37,7 +37,7 @@ export default function LandingNavbar() {
               {/* Logo */}
               <Link href="/" className="flex items-center">
                 <img
-                  src="/assets/logos/zelosify_Dark.png"
+                  src="/assets/logos/main-logo.png"
                   alt="Zelosify"
                   className="h-8 w-auto invert brightness-0 invert"
                 />

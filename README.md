@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Zelosify-Frontend/public/assets/logos/zelosify_Dark.png" alt="Zelosify" width="300">
+  <img src="Zelosify-Frontend/public/assets/logos/main-logo.png" alt="Zelosify" width="300">
 </p>
 
 <h1 align="center">Zelosify — AI-Powered Contract Hiring Platform</h1>
@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Prisma-6.3-2D3748.svg" alt="Prisma">
   <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1.svg" alt="PostgreSQL">
   <img src="https://img.shields.io/badge/AI-Groq%20%7C%20Gemini-FF6D00.svg" alt="AI">
-  <img src="https://img.shields.io/badge/license-ISC-yellow.svg" alt="License">
+  <img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License">
 </p>
 
 Multi-tenant contract hiring backend with AI candidate recommendation, strict RBAC, tenant isolation, and performance SLAs.
@@ -66,4 +66,4 @@ npm run dev
 
 ## License
 
-ISC
+MIT - see [LICENSE](LICENSE) for details.

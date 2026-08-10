@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../Zelosify-Frontend/public/assets/logos/zelosify_Dark.png" alt="Zelosify" width="300">
+  <img src="../Zelosify-Frontend/public/assets/logos/main-logo.png" alt="Zelosify" width="300">
 </p>
 
 <h1 align="center">Zelosify Backend</h1>
@@ -127,7 +127,7 @@ Zelosify Team
 
 ## License
 
-ISC
+MIT - see [LICENSE](../LICENSE) for details.
 
 ## Project Status
 
