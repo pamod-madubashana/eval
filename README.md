@@ -37,8 +37,17 @@ zelosify/
 # Install all dependencies
 npm run install:all
 
+# Start both frontend and backend (auto-starts Docker services)
+npm run dev
+```
+
+### Manual Steps (first time only)
+
+```bash
 # Start Docker services (PostgreSQL, Keycloak, MinIO)
+cd Zelosify-Backend/Server
 docker compose up -d
+cd ../..
 
 # Run database migrations and seed
 cd Zelosify-Backend/Server
@@ -46,7 +55,8 @@ npx prisma migrate dev
 npx prisma db seed
 cd ../..
 
-# Start both frontend and backend
+# Start frontend only
+cd Zelosify-Frontend
 npm run dev
 ```
 
