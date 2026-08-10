@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Eye,
   User,
+  Loader2,
 } from "lucide-react";
 import axiosInstance from "@/utils/Axios/AxiosInstance";
 import { toast } from "sonner";
@@ -403,7 +404,11 @@ export default function ManagerOpeningDetailsPage() {
                                 className="p-2 text-green-600 hover:bg-green-50 rounded-md disabled:opacity-50 transition-colors"
                                 title="Shortlist"
                               >
-                                <CheckCircle className="w-4 h-4" />
+                                {actionLoading === profile.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="w-4 h-4" />
+                                )}
                               </button>
                               <button
                                 onClick={() => handleReject(profile.id)}
@@ -411,7 +416,11 @@ export default function ManagerOpeningDetailsPage() {
                                 className="p-2 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50 transition-colors"
                                 title="Reject"
                               >
-                                <XCircle className="w-4 h-4" />
+                                {actionLoading === profile.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <XCircle className="w-4 h-4" />
+                                )}
                               </button>
                             </div>
                           )}
