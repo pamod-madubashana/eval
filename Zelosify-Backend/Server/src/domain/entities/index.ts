@@ -47,6 +47,10 @@ export class User {
   belongsToTenant(tenantId: string): boolean {
     return this.props.tenantId === tenantId;
   }
+
+  toJSON() {
+    return { ...this.props };
+  }
 }
 
 // ─── Opening Entity ──────────────────────────────────────────────
@@ -68,6 +72,7 @@ export interface OpeningProps {
 }
 
 export class Opening {
+  [key: string]: any;
   constructor(public readonly props: OpeningProps) {}
 
   get id(): string { return this.props.id; }
@@ -85,6 +90,10 @@ export class Opening {
 
   belongsToTenant(tenantId: string): boolean {
     return this.props.tenantId === tenantId;
+  }
+
+  toJSON() {
+    return { ...this.props };
   }
 }
 
@@ -130,6 +139,10 @@ export class CandidateProfile {
   wasUploadedBy(userId: string): boolean {
     return this.props.uploadedBy === userId;
   }
+
+  toJSON() {
+    return { ...this.props };
+  }
 }
 
 // ─── Score Value Object ──────────────────────────────────────────
@@ -157,6 +170,10 @@ export class Score {
 
   isRecommended(): boolean {
     return this.props.finalScore >= 0.75;
+  }
+
+  toJSON() {
+    return { ...this.props };
   }
 
   static calculate(
@@ -198,6 +215,10 @@ export class ProfileNote {
 
   isAuthoredBy(userId: string): boolean {
     return this.props.authorId === userId;
+  }
+
+  toJSON() {
+    return { ...this.props };
   }
 }
 
